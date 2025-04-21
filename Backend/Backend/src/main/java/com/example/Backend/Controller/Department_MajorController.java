@@ -3,10 +3,7 @@ package com.example.Backend.Controller;
 import com.example.Backend.DTO.request.StaffDetailRequest;
 import com.example.Backend.DTO.response.ApiResponse;
 import com.example.Backend.DTO.response.StaffDetailResponse;
-import com.example.Backend.Entity.Department;
-import com.example.Backend.Entity.Department_Facility;
-import com.example.Backend.Entity.Facility;
-import com.example.Backend.Entity.Major;
+import com.example.Backend.Entity.*;
 import com.example.Backend.Service.QlyFacility_Department_MajorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -72,6 +69,12 @@ public class Department_MajorController {
     public ApiResponse<String> deleteDetail(@PathVariable Integer idStaff, @PathVariable Integer idFacility) {
         return ApiResponse.<String>builder()
                 .result(service.deleteDetail(idStaff, idFacility)).build();
+    }
+
+
+    @GetMapping("/check-Major-facility")
+    public ApiResponse<List<Major_Facility>> getmj(){
+        return ApiResponse.<List<Major_Facility>>builder().result(service.getMF()).build();
     }
 
 }

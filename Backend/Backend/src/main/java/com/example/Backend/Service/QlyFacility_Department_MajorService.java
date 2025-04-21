@@ -112,5 +112,7 @@ public class QlyFacility_Department_MajorService {
     }
 
 
-
+    public List<Major_Facility> getMF() {
+        return majorFacilityRepository.findAll();
+    }
 }

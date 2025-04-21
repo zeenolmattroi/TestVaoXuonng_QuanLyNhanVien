@@ -2,6 +2,7 @@ package com.example.Backend.Controller;
 
 import com.example.Backend.DTO.request.AddStaff;
 import com.example.Backend.DTO.response.ApiResponse;
+import com.example.Backend.Entity.Import_History;
 import com.example.Backend.Entity.Staff;
 import com.example.Backend.Service.StaffService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,7 +34,7 @@ public class StaffController {
     }
     @PostMapping("/import-data-to-excel")
     public ApiResponse<String> importExcel(@RequestParam("file")MultipartFile file) throws IOException {
-        staffService.saveStaffByExcel(file.getInputStream());
+        staffService.saveStaffByExcel(file.getInputStream(), file.getOriginalFilename());
         return ApiResponse.<String>builder()
                 .result("đã thêm").build();
 
@@ -68,6 +69,13 @@ public class StaffController {
     public ApiResponse<Staff> getMyInfo(@PathVariable Integer id){
         return ApiResponse.<Staff>builder().result(staffService.getMyInfo(id)).build();
     }
+
+    @GetMapping("/import-history")
+    public ApiResponse<List<Import_History>> getHistory(){
+        return ApiResponse.<List<Import_History>>builder()
+                .result(staffService.getHistory()).build() ;
+    }
+
 
 
 

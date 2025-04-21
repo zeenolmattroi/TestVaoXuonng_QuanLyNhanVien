@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Staff from '@/components/Staff.vue';
 import StaffDetail from '@/components/StaffDetail.vue';
+import ImportHistory from '@/components/ImportHistory.vue';
 
 const routes = [
     {
@@ -19,6 +20,11 @@ const routes = [
         component: StaffDetail,
         props: true, // Truyền tham số route dưới dạng props cho component
     },
+    {
+        path:'/staff/import-history',
+        name: 'ImportHistory',
+        component:ImportHistory
+    }
 
 ];
 

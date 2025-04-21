@@ -161,29 +161,29 @@ const handleFileUpload = (event) => {
   selectedFile.value = event.target.files[0];
 };
 
-const importEmployees = async () => {
-  // if (selectedFile.value) {
-  //   const formData = new FormData();
-  //   formData.append('file', selectedFile.value);
+// const importEmployees = async () => {
+//   // if (selectedFile.value) {
+//   //   const formData = new FormData();
+//   //   formData.append('file', selectedFile.value);
 
-  //   try {
-  //     const response = await axios.post(importApiUrl, formData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data',
-  //       },
-  //     });
-  //     console.log('Import thành công:', response.data);
-  //     closeImportModal();
-  //     fetchEmployees(); // Tải lại danh sách nhân viên sau khi import
-  //     // Hiển thị thông báo thành công cho người dùng
-  //   } catch (error) {
-  //     console.error('Lỗi import nhân viên:', error);
-  //     // Xử lý lỗi (ví dụ: hiển thị thông báo lỗi cho người dùng)
-  //   }
-  // } else {
-  //   alert('Vui lòng chọn file để import.');
-  // }
-};
+//   //   try {
+//   //     const response = await axios.post(importApiUrl, formData, {
+//   //       headers: {
+//   //         'Content-Type': 'multipart/form-data',
+//   //       },
+//   //     });
+//   //     console.log('Import thành công:', response.data);
+//   //     closeImportModal();
+//   //     fetchEmployees(); // Tải lại danh sách nhân viên sau khi import
+//   //     // Hiển thị thông báo thành công cho người dùng
+//   //   } catch (error) {
+//   //     console.error('Lỗi import nhân viên:', error);
+//   //     // Xử lý lỗi (ví dụ: hiển thị thông báo lỗi cho người dùng)
+//   //   }
+//   // } else {
+//   //   alert('Vui lòng chọn file để import.');
+//   // }
+// };
 
 const downloadTemplate = () => {
   const apiUrln = `${apiUrl}/export-data-to-excel`;
@@ -193,14 +193,37 @@ const downloadTemplate = () => {
 };
 
 
-const uploadExcelFileWithAxios = async (event) => {
-  const file = event.target.files[0];
-  if (!file) {
-    console.warn('Chưa chọn file.');
+// const uploadExcelFileWithAxios = async (event) => {
+//   const file = event.target.files[0];
+//   if (!file) {
+//     console.warn('Chưa chọn file.');
+//     return;
+//   }
+//   const formData = new FormData();
+//   formData.append('file', file);
+//   try {
+//     const response = await axios.post(`${apiUrl}/import-data-to-excel`, formData, {
+//       headers: {
+//         'Content-Type': 'multipart/form-data',
+//       },
+//     });
+//     console.log('Kết quả import:', response.data.result);
+//     alert(response.data.result || 'Đã import dữ liệu thành công.');
+//     isImportModalOpen.value = false;
+//     fetchEmployees();
+//   } catch (error) {
+//     console.error('Lỗi import:', error);
+//     alert(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình import.');
+//   }
+// };
+
+const uploadExcelFileWithAxios = async () => {
+  if (!selectedFile.value) {
+    alert('Vui lòng chọn file Excel trước khi import.');
     return;
   }
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', selectedFile.value);
   try {
     const response = await axios.post(`${apiUrl}/import-data-to-excel`, formData, {
       headers: {
@@ -214,8 +237,13 @@ const uploadExcelFileWithAxios = async (event) => {
   } catch (error) {
     console.error('Lỗi import:', error);
     alert(error.response?.data?.message || 'Có lỗi xảy ra trong quá trình import.');
+  } finally {
+    selectedFile.value = null;
   }
 };
+
+
+
 const openAddModal = () => {
   isAddModalOpen.value = true;
 };
@@ -311,7 +339,9 @@ const viewImportHistory = () => {
       <button class="btn" @click="openImportModal()">Import nhân viên</button>
       <button class="btn" @click="downloadTemplate()">Download Template</button>
       <button class="btn" @click="openAddModal()">Thêm nhân viên</button>
-      <button class="btn" @click="viewImportHistory()">Xem lịch sử import</button>
+      <RouterLink :to="{ name: 'ImportHistory' }">
+        <button class="btn">Xem lịch sử import</button>
+      </RouterLink>
     </div>
 
     <div class="employee-list">
@@ -358,11 +388,11 @@ const viewImportHistory = () => {
             <button type="button" class="btn-close" @click="closeImportModal"></button>
           </div>
           <div class="modal-body">
-            <input type="file" accept=".xlsx, .xls" @change="uploadExcelFileWithAxios">
+            <input type="file" accept=".xlsx, .xls" @change="handleFileUpload">
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeImportModal">Đóng</button>
-            <button type="button" class="btn btn-primary" @click="importEmployees" :disabled="!selectedFile">
+            <button type="button" class="btn btn-primary" @click="uploadExcelFileWithAxios" :disabled="!selectedFile">
               Import
             </button>
           </div>

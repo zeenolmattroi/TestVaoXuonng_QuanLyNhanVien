@@ -1,8 +1,10 @@
 package com.example.Backend.Service;
 
 import com.example.Backend.DTO.request.AddStaff;
+import com.example.Backend.Entity.Import_History;
 import com.example.Backend.Entity.Staff;
 import com.example.Backend.Mapper.StaffMapper;
+import com.example.Backend.Repository.Import_HistoryRepository;
 import com.example.Backend.Repository.StaffRepository;
 import com.example.Backend.exception.AppException;
 import com.example.Backend.exception.ErrorCode;
@@ -15,9 +17,11 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +32,9 @@ public class StaffService {
     private StaffRepository staffRepository;
     @Autowired
     StaffMapper staffMapper;
+    @Autowired
+    Import_HistoryRepository importHistoryRepository;
+
 
     public List<Staff> getList() {
         return staffRepository.findAll();
@@ -71,7 +78,6 @@ public class StaffService {
             e.printStackTrace();
             return "xóa thất bại";
         }
-
     }
 
     public Staff getMyInfo(Integer id) {
@@ -112,22 +118,69 @@ public class StaffService {
         outputStream.close();
     }
 
-    public void saveStaffByExcel(InputStream file) throws IOException {
-        List<Staff> staffList = new ArrayList<>();
-        Workbook workbook = WorkbookFactory.create(file);
-        Sheet  sheet = workbook.getSheetAt(0);
+//    public void saveStaffByExcel(InputStream file) throws IOException {
+//        List<Staff> staffList = new ArrayList<>();
+//        Workbook workbook = WorkbookFactory.create(file);
+//        Sheet  sheet = workbook.getSheetAt(0);
+//
+//        sheet.forEach(row ->{
+//            if(row.getRowNum()!=0){
+//                Staff staff = new Staff();
+//                staff.setCode(row.getCell(1).getStringCellValue());
+//                staff.setName(row.getCell(2).getStringCellValue());
+//                staff.setAccountFE(row.getCell(3).getStringCellValue());
+//                staff.setAccountFPT(row.getCell(4).getStringCellValue());
+//                staff.setStatus(1);
+//                staffList.add(staff);
+//            }
+//        });
+//        staffRepository.saveAll(staffList);
+//    }
+public void saveStaffByExcel(InputStream inputStream, String fileName) throws IOException { // Nhận InputStream và fileName
+    LocalDateTime importDate = LocalDateTime.now();
+    Import_History importHistory = new Import_History();
+    importHistory.setFileName(fileName);
+    importHistory.setImportDate(importDate);
+    importHistory.setStatus("Thất bại");
+    importHistory.setRecordCount(0);
+    importHistory.setErrorMessage(null);
 
-        sheet.forEach(row ->{
-            Staff staff = new Staff();
-            if(row.getRowNum()!=0){
-                staff.setCode(row.getCell(1).getStringCellValue());
-                staff.setName(row.getCell(2).getStringCellValue());
-                staff.setAccountFE(row.getCell(3).getStringCellValue());
-                staff.setAccountFPT(row.getCell(4).getStringCellValue());
-                staff.setStatus(1);
+    List<Staff> staffList = new ArrayList<>();
+    int recordCount = 0;
+    try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                try {
+                    Staff staff = new Staff();
+                    staff.setCode(row.getCell(1).getStringCellValue().trim());
+                    staff.setName(row.getCell(2).getStringCellValue().trim());
+                    staff.setAccountFE(row.getCell(3).getStringCellValue().trim());
+                    staff.setAccountFPT(row.getCell(4).getStringCellValue().trim());
+                    staff.setStatus(1);
+                    staffList.add(staff);
+                    recordCount++;
+                } catch (Exception e) {
+                    System.err.println("Lỗi khi đọc dữ liệu từ hàng " + (i + 1) + ": " + e.getMessage());
+                    importHistory.setErrorMessage("Lỗi khi đọc dữ liệu từ file Excel.");
+                }
             }
-            staffList.add(staff);
-        });
+        }
         staffRepository.saveAll(staffList);
+        importHistory.setStatus("Thành công");
+        importHistory.setRecordCount(recordCount);
+
+    } catch (IOException e) {
+        importHistory.setErrorMessage("Lỗi khi đọc file Excel: " + e.getMessage());
+        throw e;
+    } finally {
+        importHistoryRepository.save(importHistory);
+    }
+    }
+
+    public List<Import_History> getHistory() {
+        return importHistoryRepository.findAll();
     }
 }
